@@ -224,7 +224,7 @@ BLUE_DK = "#1E3A8A"
 # ─── Load Auto-MPG ──────────────────────────────────────────────────────────────
 @st.cache_data
 def load_auto_mpg():
-    df = pd.read_csv("auto-mpg.csv")  # Changé de chemin absolu
+    df = pd.read_csv("auto-mpg.csv")
     df = df.drop(columns=["car name"], errors="ignore")
     df["horsepower"] = pd.to_numeric(df["horsepower"], errors="coerce")
     df.dropna(inplace=True)
@@ -392,7 +392,8 @@ elif page == "📊 Partie 1 – Classification":
             dummy = DummyClassifier(strategy="most_frequent")
             dummy.fit(X_train, y_train)
             dummy_acc = accuracy_score(y_test, dummy.predict(X_test))
-            dummy_class = int(dummy.predict([[0]*7][0]))
+            # CORRECTION 1 : indexer le résultat APRÈS predict, pas l'entrée avant
+            dummy_class = int(dummy.predict([[0]*7])[0])
             metric_cards([("Accuracy baseline", f"{dummy_acc:.3f}"), ("Classe prédite", str(dummy_class))])
             info("Le classifieur constant prédit toujours la classe majoritaire. C'est le référentiel à battre.")
 
@@ -514,8 +515,8 @@ elif page == "📊 Partie 1 – Classification":
             ("RF Accuracy", f"{rf_acc:.3f}"),
         ])
 
-        # Save RF model
-        with open("/tmp/auto-mpg_rf.pkl", "wb") as f:
+        # CORRECTION 2 : chemin relatif compatible Windows (pas /tmp/)
+        with open("auto-mpg_rf.pkl", "wb") as f:
             pickle.dump(best_rf, f)
         info("Modèle Random Forest optimisé sauvegardé.")
 
@@ -559,7 +560,6 @@ elif page == "📊 Partie 1 – Classification":
         plt.close()
 
         sub("Comparaison globale des classifieurs")
-        # Arbre optimisé
         gs2 = GridSearchCV(DecisionTreeClassifier(random_state=42),
                            {"max_depth": list(range(1,16))}, cv=5, n_jobs=-1)
         gs2.fit(X_train, y_train)
@@ -585,9 +585,9 @@ elif page == "📊 Partie 1 – Classification":
         st.pyplot(fig2)
         plt.close()
 
-        # Save best model
+        # CORRECTION 3 : chemin relatif compatible Windows (pas /tmp/)
         best_model = gb if gb_acc == max(accs) else gs_rf2.best_estimator_
-        with open("/tmp/auto-mpg.pkl", "wb") as f:
+        with open("auto-mpg.pkl", "wb") as f:
             pickle.dump(best_model, f)
         info(f"Meilleur modèle de classification sauvegardé : {'Gradient Boosting' if gb_acc==max(accs) else 'Random Forest'}")
 
@@ -674,7 +674,6 @@ elif page == "📊 Partie 1 – Classification":
         metric_cards([(name, f"{val:.3f}") for name, val in auc_vals.items()])
         best_clf = max(auc_vals, key=auc_vals.get)
         info(f"Le meilleur classifieur selon l'AUC est **{best_clf}** avec AUC = {auc_vals[best_clf]:.3f}")
-
 # ════════════════════════════════════════════════════════════════════════════════
 # PAGE : PARTIE 2 – RÉGRESSION
 # ════════════════════════════════════════════════════════════════════════════════
